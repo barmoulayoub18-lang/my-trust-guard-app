@@ -1,4 +1,4 @@
-﻿const axios = require('axios');
+﻿import axios from 'axios';
 
 async function scanLink(url) {
     try {
@@ -165,4 +165,4 @@ async function scanLink(url) {
     }
 }
 
-module.exports = { scanLink };
+export { scanLink };
