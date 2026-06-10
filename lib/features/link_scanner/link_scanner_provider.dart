@@ -22,23 +22,30 @@ class LinkScannerProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print("Provider invoking LinkScannerService.scanUrl for: $url");
       final data = await LinkScannerService.scanUrl(url);
+      
+      print("Parsing operational data structure into LinkScanModel...");
       final model = LinkScanModel.fromJson(data);
       _currentResult = model;
+      print("Parsing complete. Risk score assigned: ${model.riskScore}");
 
       final user = SupabaseService.currentUser;
       if (user != null) {
-        await SupabaseService.client.from('link_scans').insert({
-          'user_id': user.id,
-          'original_url': model.originalUrl,
-          'final_url': model.finalUrl,
-          'risk_score': model.riskScore,
-          'is_phishing': model.isPhishing,
-          'scan_details': model.scanDetails
-        });
-        await fetchUserHistory();
+        try {
+          await SupabaseService.client.from('link_scans').insert({
+            'user_id': user.id,
+            'original_url': model.originalUrl,
+            'final_url': model.finalUrl,
+            'risk_score': model.riskScore,
+            'is_phishing': model.isPhishing,
+            'scan_details': Map<String, dynamic>.from(model.scanDetails)
+          });
+          await fetchUserHistory();
+        } catch (_) {}
       }
     } catch (e) {
+      print("Detailed error tracking context within Provider: $e");
       String cleanMessage = e.toString().replaceAll("Exception: ", "");
       if (cleanMessage.contains("<!DOCTYPE html>") || cleanMessage.contains("Cannot POST")) {
         cleanMessage = "Server endpoint misconfiguration or incorrect backend URL connection.";

@@ -4,6 +4,7 @@ import '../../core/constants/colors.dart';
 import '../../presentation/widgets/custom_button.dart';
 import '../../presentation/widgets/custom_card.dart';
 import '../../presentation/widgets/loading_widget.dart';
+import '../../data/models/link_scan_model.dart';
 
 class LinkScannerScreen extends StatefulWidget {
   const LinkScannerScreen({super.key});
@@ -66,6 +67,7 @@ class _LinkScannerScreenState extends State<LinkScannerScreen> {
                   ? null
                   : () {
                       FocusScope.of(context).unfocus();
+                      print("Triggering threat scan sequence via UI button push");
                       _provider.scanTargetUrl(_urlController.text);
                     },
               text: 'Execute Threat Scan',
@@ -145,11 +147,15 @@ class _LinkScannerScreenState extends State<LinkScannerScreen> {
     );
   }
 
-  Widget _buildResultsCard(dynamic result) {
+  Widget _buildResultsCard(LinkScanModel result) {
     final score = result.riskScore;
     final color = score >= 75 
         ? AppColors.trustLow 
         : (score >= 45 ? AppColors.trustMedium : AppColors.trustHigh);
+
+    final siteSummary = result.siteSummary;
+    final verifiableReason = result.verifiableReason;
+    final flags = result.detectedFlags;
 
     return CustomCard(
       child: Column(
@@ -174,19 +180,31 @@ class _LinkScannerScreenState extends State<LinkScannerScreen> {
           const SizedBox(height: 12),
           Text('Trace Destination: ${result.finalUrl}', style: const TextStyle(fontSize: 13)),
           const SizedBox(height: 16),
-          const Text('Security Evaluation Vectors:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          const SizedBox(height: 6),
-          if (result.scanDetails['detected_flags'] != null)
-            ...(result.scanDetails['detected_flags'] as List).map((flag) => Padding(
+          
+          const Text('فكرة عامة عن الموقع ومحتواه (قبل الدخول):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color.fromARGB(255, 0, 170, 255))),
+          const SizedBox(height: 4),
+          Text(siteSummary, style: const TextStyle(fontSize: 13, height: 1.4, color: Colors.black87)),
+          const SizedBox(height: 16),
+          
+          const Text('التحليل الفعلي والسبب التفصيلي:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color.fromARGB(255, 8, 173, 255))),
+          const SizedBox(height: 4),
+          Text(verifiableReason, style: const TextStyle(fontSize: 13, height: 1.4, color: Colors.black87)),
+          const SizedBox(height: 16),
+          
+          if (flags.isNotEmpty) ...[
+            const Text('Security Evaluation Vectors:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 6),
+            ...flags.map((flag) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2.0),
                   child: Row(
                     children: [
                       const Icon(Icons.radio_button_checked, size: 14, color: Colors.orange),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(flag.toString(), style: const TextStyle(fontSize: 12))),
+                      Expanded(child: Text(flag, style: const TextStyle(fontSize: 12))),
                     ],
                   ),
                 )),
+          ],
         ],
       ),
     );
