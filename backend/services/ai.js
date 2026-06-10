@@ -2,7 +2,7 @@ import axios from "axios";
 
 const AI_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "meta-llama/llama-3-8b-instruct";
-const API_KEY = "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";
+const API_KEY = process.env.OPENROUTER_API_KEY;
 const TIMEOUT = 20000;
 
 export async function analyzeStoreWithAI(cleanData, query) {
