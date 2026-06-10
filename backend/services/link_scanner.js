@@ -27,7 +27,7 @@ async function scanLink(url) {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                     },
-                    timeout: 4000
+                    timeout: 5000
                 });
 
                 if (response.status >= 300 && response.status < 400 && response.headers.location) {
@@ -82,7 +82,7 @@ async function scanLink(url) {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Language': 'en-US,en;q=0.5'
                 },
-                timeout: 5000
+                timeout: 6000
             });
             const html = pageResponse.data;
             if (typeof html === 'string') {
@@ -162,15 +162,18 @@ async function scanLink(url) {
                 riskScore = Math.max(riskScore, aiResult.AI_Score);
                 console.log("⚖️ [LINK SCANNER METRIC RE-CALCULATION]: Adjusting score parameter matching AI calculations output score:", riskScore);
             }
-            if (aiResult.Phishing_Detected === true) {
+            if (aiResult.AI_Score === undefined && aiResult.risk_score !== undefined) {
+                riskScore = Math.max(riskScore, aiResult.risk_score);
+            }
+            if (aiResult.Phishing_Detected === true || aiResult.is_phishing === true) {
                 isPhishing = true;
                 console.log("🚨 [LINK SCANNER STATE FLAG OVERRIDE]: Threat matrix verification confirmed by deep scanning sequence.");
             }
-            if (aiResult.Site_Summary) {
-                siteSummary = aiResult.Site_Summary;
+            if (aiResult.Site_Summary || aiResult.site_summary) {
+                siteSummary = aiResult.Site_Summary || aiResult.site_summary;
             }
-            if (aiResult.Verifiable_Reason) {
-                dynamicReason = aiResult.Verifiable_Reason;
+            if (aiResult.Verifiable_Reason || aiResult.verifiable_reason) {
+                dynamicReason = aiResult.Verifiable_Reason || aiResult.verifiable_reason;
             }
         } else {
             console.log("⚠️ [LINK SCANNER AI ROUTER PIPELINE ERROR]: aiResult object returned empty, executing standard baseline security rules text output mapping");

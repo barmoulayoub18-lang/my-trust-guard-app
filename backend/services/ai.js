@@ -1,9 +1,9 @@
 import axios from "axios";
 
 const AI_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "meta-llama/llama-3-8b-instruct";
+const MODEL = process.env.AI_MODEL || "google/gemini-2.5-flash";
 const API_KEY = process.env.OPENROUTER_API_KEY;
-const TIMEOUT = 20000;
+const TIMEOUT = 25000;
 
 export async function analyzeStoreWithAI(cleanData, query) {
   console.log("\n================ [AI SERVICE] analyzeStoreWithAI START =================");
