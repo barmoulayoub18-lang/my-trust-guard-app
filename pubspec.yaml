@@ -1,0 +1,59 @@
+name: trust_guard_app
+description: Smart AI app to detect fake online stores and ensure safe shopping
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  flutter_riverpod: ^2.5.1
+
+  supabase_flutter: ^2.12.4
+
+  dio: ^5.9.2
+  http: ^1.2.1
+
+  flutter_dotenv: ^6.0.0
+
+  flutter_secure_storage: ^9.2.2
+
+  uuid: ^4.5.3
+  intl: ^0.20.2
+  connectivity_plus: ^7.0.0
+
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10
+  lottie: ^3.1.2
+  shimmer: ^3.0.0
+
+  image_picker: ^1.2.1
+  cached_network_image: ^3.4.1
+
+  url_launcher: ^6.3.0
+  share_plus: ^7.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/icon.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
