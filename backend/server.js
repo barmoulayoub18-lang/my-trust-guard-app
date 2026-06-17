@@ -114,28 +114,26 @@ async function analyzeWithAI(cleanData, query) {
         {
           role: "system",
           content:
-            "You are an uncompromising, strictly realistic, and hyper-critical ecommerce trust evaluation engine. Your job is to calculate an exact, highly specific trust score (0-100) and generate a raw analysis. Never apply default rounded scores (like 50, 60, 75, or a flat 82) to famous or globally known web stores. Every single shop must be judged completely from scratch based on the unique evidence provided in the dataset. Evaluate strict criteria with zero bias: actual customer service quality, customer reviews across platforms, brand reputation, management efficiency, speed of processing/shipping, social media feedback, and active business operations. Be brutally honest to avoid unfair inflation or downgrading. In the 'reviews' field, synthesize a direct, comprehensive summary of actual customer opinions, star ratings, or platform feedback (e.g., Trustpilot, social media) discovered in the data. You MUST return ONLY a JSON object.",
+            "You are an uncompromising, ultra-rigorous, and hyper-realistic e-commerce evaluation engine. Your absolute goal is 100% precision with zero automated patterns or general brand inflation. You must never assign default, lazy, or recurring benchmark scores (such as a generic 82% for popular stores). Evaluate every single store strictly and customly by breaking down its actual customer service quality, social media feedback, management efficiency, transaction/shipping speed, real customer ratings, and active brand operations. Every store must receive an unrounded, completely custom score (e.g., 54, 71, 93, 86) representing its absolute real-world performance, with zero sugarcoating. In the 'reviews' field, synthesize an authentic summary of actual customer opinions and ratings from the data—vary your linguistic structure drastically and never start with fixed templates like 'Mixed reviews...'. In the 'explanation' field, you MUST first provide a true, brief introduction defining what the platform/link is, followed immediately by the objective technical and risk-based justification.",
         },
         {
           role: "user",
           content: `
-Analyze this store or product:
-
+Analyze this store or platform query:
 "${query}"
 
-DATA PROVIDED:
+EXTRACTED SEARCH DATA FOR ANALYSIS:
 ${JSON.stringify(cleanData)}
 
-Return ONLY JSON format without markdown wrapping:
-
+Strictly return a clean, unformatted JSON object matching this schema precisely:
 {
-  "score": number (0-100 based strictly on specific granular criteria and real efforts),
+  "score": number (0-100, calculated with absolute strictness and zero rounding biases),
   "risk": "low" | "medium" | "high",
-  "reviews": "A highly accurate dynamic summary of real customer experiences, sentiment, social media feedback, or ratings extracted strictly from the provided text data",
+  "reviews": "A dynamically structured, highly realistic summary of customer experiences, star ratings, or public social metrics found in the data. Vary sentence starters completely based on the specific brand's situation.",
   "activity": "active | suspicious | inactive",
-  "trust_signals": "positive indicators observed",
-  "red_flags": ["list of realistic risks or shortcomings"],
-  "explanation": "clear precise breakdown of the evaluation"
+  "trust_signals": "granular positive indicators or corporate highlights",
+  "red_flags": ["highly specific risks, shipping latencies, support complaints, or domain discrepancies"],
+  "explanation": "A factual introductory definition of what this store/URL actually is, followed by a tight security and trust analysis explaining the final score decision."
 }
           `,
         },
@@ -199,11 +197,11 @@ function extractJson(text) {
     return {
       score: 53,
       risk: "medium",
-      reviews: "unknown",
+      reviews: "Analysis parsing encountered an unexpected format structural discrepancy.",
       activity: "unknown",
       trust_signals: "unknown",
       red_flags: ["AI parsing failed"],
-      explanation: "AI response parsing failed",
+      explanation: "AI response parsing failed due to string return formatting anomalies.",
     };
   }
 }
