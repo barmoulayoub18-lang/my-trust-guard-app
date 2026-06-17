@@ -19,8 +19,8 @@ class CartItemModel {
     final product = map['products'] ?? {};
 
     return CartItemModel(
-      id: map['id'],
-      productId: product['id'] ?? '',
+      id: map['id']?.toString() ?? '',
+      productId: product['id']?.toString() ?? '',
       name: product['name'] ?? '',
       price: (product['price'] ?? 0).toDouble(),
       imageUrl: product['image_url'],

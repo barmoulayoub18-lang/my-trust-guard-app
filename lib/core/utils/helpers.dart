@@ -5,16 +5,13 @@ import '../constants/colors.dart';
 class Helpers {
   Helpers._();
 
-  // =====================================================
-  // 📢 SNACKBAR (احترافي)
-  // =====================================================
   static void showSnackBar(
     BuildContext context,
     String message, {
     bool isError = false,
     Duration duration = const Duration(seconds: 3),
   }) {
-    final color = isError ? Colors.red : AppColors.primary;
+    final color = isError ? const Color(0xFFEF4444) : AppColors.primary;
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -22,29 +19,28 @@ class Helpers {
         SnackBar(
           content: Text(
             message,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           backgroundColor: color,
           duration: duration,
           behavior: SnackBarBehavior.floating,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          margin: const EdgeInsets.all(12),
+          margin: const EdgeInsets.all(16),
         ),
       );
   }
 
-  // =====================================================
-  // 📅 FORMAT DATE
-  // =====================================================
   static String formatDate(DateTime date) {
     return DateFormat('yyyy-MM-dd • HH:mm').format(date);
   }
 
-  // =====================================================
-  // ⏱ TIME AGO
-  // =====================================================
   static String timeAgo(DateTime date) {
     final diff = DateTime.now().difference(date);
 
@@ -56,18 +52,12 @@ class Helpers {
     return formatDate(date);
   }
 
-  // =====================================================
-  // 🎯 TRUST SCORE COLOR
-  // =====================================================
   static Color getScoreColor(double score) {
     if (score >= 80) return AppColors.trustHigh;
     if (score >= 50) return AppColors.trustMedium;
     return AppColors.trustLow;
   }
 
-  // =====================================================
-  // ⚠️ RISK COLOR
-  // =====================================================
   static Color getRiskColor(String risk) {
     switch (risk.toLowerCase()) {
       case 'low':
@@ -77,22 +67,16 @@ class Helpers {
       case 'high':
         return AppColors.trustLow;
       default:
-        return Colors.grey;
+        return const Color(0xFF94A3B8);
     }
   }
 
-  // =====================================================
-  // 🏷 RISK LABEL
-  // =====================================================
   static String getRiskLabel(double score) {
     if (score >= 80) return "SAFE";
     if (score >= 50) return "CAUTION";
     return "DANGEROUS";
   }
 
-  // =====================================================
-  // 📧 EMAIL VALIDATOR
-  // =====================================================
   static String? validateEmail(String value) {
     if (value.trim().isEmpty) return "Email is required";
 
@@ -102,9 +86,6 @@ class Helpers {
     return null;
   }
 
-  // =====================================================
-  // 🔒 PASSWORD VALIDATOR (أقوى 🔥)
-  // =====================================================
   static String? validatePassword(String value) {
     if (value.isEmpty) return "Password is required";
     if (value.length < 6) return "Minimum 6 characters";
@@ -120,16 +101,10 @@ class Helpers {
     return null;
   }
 
-  // =====================================================
-  // 🔗 URL CHECK
-  // =====================================================
   static bool isValidUrl(String text) {
     return Uri.tryParse(text)?.hasAbsolutePath ?? false;
   }
 
-  // =====================================================
-  // 🔢 SAFE PARSE DOUBLE
-  // =====================================================
   static double parseDouble(dynamic value, {double fallback = 0}) {
     if (value == null) return fallback;
 
@@ -139,11 +114,7 @@ class Helpers {
     return double.tryParse(value.toString()) ?? fallback;
   }
 
-  // =====================================================
-  // 🧠 DEBUG LOG (يعمل فقط في debug)
-  // =====================================================
   static void log(dynamic data) {
-      // ignore: avoid_print
-      print("🧠 $data");
+    debugPrint(data.toString());
   }
 }

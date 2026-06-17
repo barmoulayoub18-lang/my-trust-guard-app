@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class SupabaseService {
   static SupabaseClient? _client;
 
-  static Future<void> init() async {
+  static Future init() async {
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
       anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
@@ -39,20 +39,20 @@ class SupabaseService {
 
   static bool get isLoggedIn => currentUser != null;
 
-  static Stream<AuthState> get authState => client.auth.onAuthStateChange;
+  static Stream get authState => client.auth.onAuthStateChange;
 
-  static Future<void> sendOtp(String email) async {
+  static Future sendOtp(String email) async {
     return;
   }
 
-  static Future<void> verifyOtp({
+  static Future verifyOtp({
     required String email,
     required String token,
   }) async {
     return;
   }
 
-  static Future<void> signUp({
+  static Future signUp({
     required String email,
     required String password,
   }) async {
@@ -67,7 +67,7 @@ class SupabaseService {
     }
   }
 
-  static Future<void> signIn({
+  static Future signIn({
     required String email,
     required String password,
   }) async {
@@ -89,7 +89,7 @@ class SupabaseService {
     }
   }
 
-  static Future<void> signOut() async {
+  static Future signOut() async {
     await client.auth.signOut();
   }
 
@@ -97,13 +97,12 @@ class SupabaseService {
     final user = currentUser;
     if (user == null) throw Exception("User not logged in");
 
-    final data =
-        await client.from('profiles').select().eq('id', user.id).single();
+    final data = await client.from('profiles').select().eq('id', user.id).single();
 
     return data;
   }
 
-  static Future<void> saveAnalysis({
+  static Future saveAnalysis({
     required String storeId,
     required double score,
     required Map<String, dynamic> details,
@@ -132,7 +131,7 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(data);
   }
 
-  static Future<void> addComplaint({
+  static Future addComplaint({
     required String storeId,
     required String reason,
   }) async {
@@ -156,7 +155,7 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(data);
   }
 
-  static Future<void> addReview({
+  static Future addReview({
     required String storeId,
     required int rating,
     String? comment,
@@ -172,7 +171,7 @@ class SupabaseService {
     });
   }
 
-  static Future<void> createTransaction({
+  static Future createTransaction({
     required String storeId,
     required double amount,
   }) async {
@@ -186,7 +185,7 @@ class SupabaseService {
     });
   }
 
-  static Future<String> uploadImage(File file) async {
+  static Future uploadImage(File file) async {
     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
     final path = "products/$fileName.jpg";
 
@@ -205,7 +204,7 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(data);
   }
 
-  static Future<void> addProduct({
+  static Future addProduct({
     required String name,
     required String description,
     required double price,
@@ -231,7 +230,7 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(data);
   }
 
-  static Future<void> addToCart(String productId) async {
+  static Future addToCart(String productId) async {
     final user = currentUser;
     if (user == null) return;
 
@@ -258,18 +257,18 @@ class SupabaseService {
     }
   }
 
-  static Future<void> removeFromCart(String cartId) async {
+  static Future removeFromCart(String cartId) async {
     await client.from('cart_items').delete().eq('id', cartId);
   }
 
-  static Future<void> clearCart() async {
+  static Future clearCart() async {
     final user = currentUser;
     if (user == null) return;
 
     await client.from('cart_items').delete().eq('user_id', user.id);
   }
 
-  static Future<String> createOrder({
+  static Future createOrder({
     required double total,
     required String phone,
   }) async {
@@ -284,7 +283,7 @@ class SupabaseService {
     return order['id'];
   }
 
-  static Future<void> addOrderItem({
+  static Future addOrderItem({
     required String orderId,
     required String productId,
     required int quantity,
@@ -295,6 +294,95 @@ class SupabaseService {
       "product_id": productId,
       "quantity": quantity,
       "price": price,
+    });
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchEscrowDemoAccounts() async {
+    final data = await client.from('escrow_demo_accounts').select().order('display_name');
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  static Future<Map<String, dynamic>> fetchUserWalletBalances() async {
+    final user = currentUser;
+    if (user == null) throw Exception("User not logged in");
+
+    final data = await client.from('wallets').select().eq('user_id', user.id).maybeSingle();
+    if (data == null) {
+      final fresh = await client.from('wallets').insert({
+        'user_id': user.id,
+        'available_balance': 0.00,
+        'frozen_balance': 0.00,
+      }).select().single();
+      return fresh;
+    }
+    return data;
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchWalletHistoryLogs() async {
+    final user = currentUser;
+    if (user == null) return [];
+
+    final wallet = await client.from('wallets').select('id').eq('user_id', user.id).maybeSingle();
+    if (wallet == null) return [];
+
+    final data = await client
+        .from('wallet_transactions')
+        .select()
+        .eq('wallet_id', wallet['id'])
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchStandaloneEscrowTransactions() async {
+    final user = currentUser;
+    if (user == null) return [];
+
+    final data = await client
+        .from('transactions')
+        .select()
+        .eq('buyer_id', user.id)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  static Future triggerSandboxTopup(double amount) async {
+    final user = currentUser;
+    if (user == null) throw Exception("User not logged in");
+
+    await client.rpc('execute_sandbox_topup', params: {
+      'target_user_id': user.id,
+      'amount_to_add': amount,
+    });
+  }
+
+  static Future triggerStandaloneEscrowHold({
+    required double amount,
+    required String memo,
+    required String demoRecipientTag,
+  }) async {
+    final user = currentUser;
+    if (user == null) throw Exception("User not logged in");
+
+    final res = await client.rpc('create_standalone_escrow_hold', params: {
+      'buyer_id_param': user.id,
+      'amount_param': amount,
+      'memo_param': memo,
+      'demo_recipient_tag': demoRecipientTag,
+    });
+    return res.toString();
+  }
+
+  static Future triggerStandaloneRelease(String transactionId) async {
+    await client.rpc('execute_standalone_release', params: {
+      'transaction_id_param': transactionId,
+    });
+  }
+
+  static Future triggerStandaloneRefund(String transactionId) async {
+    await client.rpc('execute_standalone_refund', params: {
+      'transaction_id_param': transactionId,
     });
   }
 
@@ -324,7 +412,7 @@ class SupabaseService {
     return Exception(msg);
   }
 
-  static Future<void> createProfileIfNotExists() async {
+  static Future createProfileIfNotExists() async {
     final user = currentUser;
     if (user == null) return;
 

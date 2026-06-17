@@ -50,6 +50,10 @@ class CartNotifier extends StateNotifier<CartState> {
     await loadCart();
   }
 
+  Future<void> adjustItemsAfterOrder() async {
+    state = CartState.initial();
+  }
+
   Future<void> increase(String productId) async {
     await repository.addToCart(productId);
     await loadCart();
@@ -72,13 +76,19 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   Future<void> clear() async {
-    final currentItems = state.items;
-
-    for (var item in currentItems) {
-      await repository.removeFromCart(item['id']);
+    state = state.copyWith(isLoading: true);
+    try {
+      final currentItems = List<Map<String, dynamic>>.from(state.items);
+      for (var item in currentItems) {
+        await repository.removeFromCart(item['id']);
+      }
+      state = CartState.initial();
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: "Error clearing cart",
+      );
     }
-
-    state = CartState.initial();
   }
 }
 

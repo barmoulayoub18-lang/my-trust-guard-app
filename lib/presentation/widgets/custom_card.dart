@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../core/constants/colors.dart';
 
 class CustomCard extends StatefulWidget {
   final String? title;
@@ -27,7 +28,7 @@ class CustomCard extends StatefulWidget {
     this.gradient,
     this.color,
     this.padding = 16,
-    this.borderRadius = 20,
+    this.borderRadius = 12,
     this.margin,
     this.hasShadow = true,
   });
@@ -36,20 +37,15 @@ class CustomCard extends StatefulWidget {
   State<CustomCard> createState() => _CustomCardState();
 }
 
-class _CustomCardState extends State<CustomCard> {
+class _CustomCardState extends State<CustomCard> with SingleTickerProviderStateMixin {
   bool isPressed = false;
   bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final backgroundColor =
-        widget.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
-
-    final textPrimary = isDark ? Colors.white : Colors.black87;
-
-    final textSecondary = isDark ? Colors.white70 : Colors.black54;
+    final backgroundColor = widget.color ?? AppColors.surface;
+    final textPrimary = AppColors.textPrimary;
+    final textSecondary = AppColors.textSecondary;
 
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
@@ -60,26 +56,30 @@ class _CustomCardState extends State<CustomCard> {
         onTapCancel: () => setState(() => isPressed = false),
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOutCubic,
           margin: widget.margin,
           padding: EdgeInsets.all(widget.padding),
           transform: Matrix4.identity()
-            ..scale(isPressed ? 0.96 : (isHovered ? 1.02 : 1.0)),
+            ..scale(isPressed ? 0.95 : (isHovered ? 1.03 : 1.0)),
           decoration: BoxDecoration(
             gradient: widget.gradient,
             color: widget.gradient == null ? backgroundColor : null,
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.05),
+              color: isHovered 
+                  ? AppColors.primary.withOpacity(0.2)
+                  : const Color(0xFFF1F5F9),
+              width: isHovered ? 1.5 : 1.0,
             ),
             boxShadow: widget.hasShadow
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
-                      blurRadius: isHovered ? 25 : 15,
-                      offset: const Offset(0, 8),
+                      color: isHovered 
+                          ? const Color(0xFF0F172A).withOpacity(0.07)
+                          : const Color(0xFF0F172A).withOpacity(0.03),
+                      blurRadius: isHovered ? 24 : 14,
+                      offset: isHovered ? const Offset(0, 8) : const Offset(0, 4),
                     ),
                   ]
                 : [],
@@ -88,8 +88,8 @@ class _CustomCardState extends State<CustomCard> {
             borderRadius: BorderRadius.circular(widget.borderRadius),
             child: BackdropFilter(
               filter: ImageFilter.blur(
-                sigmaX: isDark ? 6 : 0,
-                sigmaY: isDark ? 6 : 0,
+                sigmaX: 0,
+                sigmaY: 0,
               ),
               child: _buildContent(
                 textPrimary,
@@ -114,20 +114,16 @@ class _CustomCardState extends State<CustomCard> {
           Row(
             children: [
               if (widget.icon != null)
-                Container(
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF6C63FF),
-                        Color(0xFF4A47A3),
-                      ],
-                    ),
+                    color: AppColors.primary.withOpacity(isHovered ? 0.15 : 0.08),
                   ),
                   child: Icon(
                     widget.icon,
-                    color: Colors.white,
+                    color: AppColors.primary,
                     size: 20,
                   ),
                 ),
@@ -137,21 +133,23 @@ class _CustomCardState extends State<CustomCard> {
                   child: Text(
                     widget.title!,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: textPrimary,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ),
             ],
           ),
         if (widget.subtitle != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             widget.subtitle!,
             style: TextStyle(
               fontSize: 13,
               color: textSecondary,
+              height: 1.5,
             ),
           ),
         ],

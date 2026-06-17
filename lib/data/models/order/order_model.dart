@@ -12,9 +12,14 @@ class OrderItemModel {
   });
 
   factory OrderItemModel.fromMap(Map<String, dynamic> map) {
+    String pName = map['name'] ?? '';
+    if (pName.isEmpty && map['products'] != null) {
+      pName = map['products']['name'] ?? '';
+    }
+
     return OrderItemModel(
       productId: map['product_id'] ?? '',
-      name: map['name'] ?? '',
+      name: pName,
       price: (map['price'] ?? 0).toDouble(),
       quantity: map['quantity'] ?? 1,
     );
@@ -54,12 +59,14 @@ class OrderModel {
     List<Map<String, dynamic>> itemsData,
   ) {
     return OrderModel(
-      id: map['id'],
+      id: map['id']?.toString() ?? '',
       userId: map['user_id'] ?? '',
       totalAmount: (map['total_amount'] ?? 0).toDouble(),
       status: map['status'] ?? 'pending',
       phone: map['phone'] ?? '',
-      createdAt: DateTime.parse(map['created_at']),
+      createdAt: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']) 
+          : DateTime.now(),
       items: itemsData.map((e) => OrderItemModel.fromMap(e)).toList(),
     );
   }

@@ -66,5 +66,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This application requires access to your location to integrate interactive mapping functionalities and display regional retail data safely.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This application requires continuous access to your location to manage regional retail tracking and secure mapping functionalities updates.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This application requires access to the camera to document and upload video proofs for artisan identity and platform verification files safely.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This application requires access to the microphone to record audio descriptions during the video documentation process for verification files.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This application requires access to the photo library to let users select and upload store images and visual verification attachment records safely.</string>
+	<key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>whatsapp</string>
+    </array>
 </dict>
 </plist>

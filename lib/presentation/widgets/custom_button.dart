@@ -19,8 +19,8 @@ class CustomButton extends StatefulWidget {
     this.isLoading = false,
     this.type = ButtonType.primary,
     this.icon,
-    this.height = 52,
-    this.borderRadius = 16,
+    this.height = 50,
+    this.borderRadius = 12,
   });
 
   @override
@@ -33,7 +33,6 @@ class _CustomButtonState extends State<CustomButton> {
   @override
   Widget build(BuildContext context) {
     final isDisabled = widget.onPressed == null || widget.isLoading;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => isPressed = true),
@@ -41,61 +40,51 @@ class _CustomButtonState extends State<CustomButton> {
       onTapCancel: () => setState(() => isPressed = false),
       onTap: isDisabled ? null : widget.onPressed,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.fastOutSlowIn,
         height: widget.height,
         width: double.infinity,
-
-        transform: Matrix4.identity()
-          ..scale(isPressed ? 0.96 : 1.0),
-
+        transform: Matrix4.identity()..scale(isPressed ? 0.97 : 1.0),
         decoration: BoxDecoration(
           gradient: widget.type == ButtonType.primary
               ? AppColors.primaryGradient
               : null,
-
           color: widget.type == ButtonType.outline
               ? Colors.transparent
               : widget.type == ButtonType.ghost
-                  ? (isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.black.withOpacity(0.04))
+                  ? AppColors.textSecondary.withOpacity(0.06)
                   : null,
-
           borderRadius: BorderRadius.circular(widget.borderRadius),
-
           border: widget.type == ButtonType.outline
-              ? Border.all(color: AppColors.primary, width: 1.2)
+              ? Border.all(color: AppColors.border, width: 1.5)
               : null,
-
           boxShadow: widget.type == ButtonType.primary
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.35),
-                    blurRadius: isPressed ? 10 : 20,
-                    offset: const Offset(0, 8),
+                    color: AppColors.primary.withOpacity(0.25),
+                    blurRadius: isPressed ? 8 : 16,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : [],
         ),
-
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             onTap: isDisabled ? null : widget.onPressed,
-            child: Center(child: buildContent(isDark)),
+            child: Center(child: buildContent()),
           ),
         ),
       ),
     );
   }
 
-  Widget buildContent(bool isDark) {
+  Widget buildContent() {
     if (widget.isLoading) {
       return SizedBox(
-        height: 22,
-        width: 22,
+        height: 20,
+        width: 20,
         child: CircularProgressIndicator(
           strokeWidth: 2.2,
           valueColor: AlwaysStoppedAnimation<Color>(
@@ -109,10 +98,12 @@ class _CustomButtonState extends State<CustomButton> {
 
     final textColor = widget.type == ButtonType.primary
         ? Colors.white
-        : AppColors.primary;
+        : widget.type == ButtonType.outline
+            ? AppColors.textPrimary
+            : AppColors.primary;
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 180),
       child: Row(
         key: ValueKey(widget.text),
         mainAxisAlignment: MainAxisAlignment.center,
@@ -120,18 +111,18 @@ class _CustomButtonState extends State<CustomButton> {
           if (widget.icon != null) ...[
             Icon(
               widget.icon,
-              size: 20,
+              size: 18,
               color: textColor,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
           ],
           Text(
             widget.text,
             style: TextStyle(
               color: textColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              letterSpacing: 0.3,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 0.1,
             ),
           ),
         ],

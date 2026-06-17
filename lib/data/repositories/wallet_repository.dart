@@ -110,4 +110,76 @@ class WalletRepository {
 
     await triggerEscrowDispute(orderId);
   }
+
+  Future<Map<String, dynamic>> getUserWalletBalances() async {
+    try {
+      return await SupabaseService.fetchUserWalletBalances();
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getWalletHistoryLogs() async {
+    try {
+      return await SupabaseService.fetchWalletHistoryLogs();
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getStandaloneEscrowTransactions() async {
+    try {
+      return await SupabaseService.fetchStandaloneEscrowTransactions();
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getEscrowDemoAccounts() async {
+    try {
+      return await SupabaseService.fetchEscrowDemoAccounts();
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> executeSandboxTopup(double amount) async {
+    try {
+      await SupabaseService.triggerSandboxTopup(amount);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<String> executeStandaloneEscrowHold({
+    required double amount,
+    required String memo,
+    required String demoRecipientTag,
+  }) async {
+    try {
+      return await SupabaseService.triggerStandaloneEscrowHold(
+        amount: amount,
+        memo: memo,
+        demoRecipientTag: demoRecipientTag,
+      );
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> executeStandaloneRelease(String transactionId) async {
+    try {
+      await SupabaseService.triggerStandaloneRelease(transactionId);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> executeStandaloneRefund(String transactionId) async {
+    try {
+      await SupabaseService.triggerStandaloneRefund(transactionId);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

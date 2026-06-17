@@ -160,7 +160,7 @@ export async function deepScanLinkWithAI(domain, finalUrl, redirectsCount, heuri
         messages: [
           {
             role: "system",
-            content: "Analyze the domain, final destination URL, redirect count, flags, and HTML metadata to determine if it is a phishing or scam attempt. Return a clean JSON object with keys: AI_Score (integer 0-100), Phishing_Detected (boolean), Site_Summary (string, maximum 2 sentences in Arabic summarizing exactly what this website pretends to be), and Verifiable_Reason (string in Arabic explaining the scientific and technical reason behind this security assessment based on structural indicators, brand spoofing risk, or transport patterns)."
+            content: "Analyze the domain, final destination URL, redirect count, flags, and HTML metadata to determine if it is a phishing or scam attempt. Return a clean JSON object with keys: AI_Score (integer 0-100), Phishing_Detected (boolean), Site_Summary (string, maximum 2 sentences summarizing exactly what this website pretends to be in English), and Verifiable_Reason (string in English explaining the scientific and technical reason behind this security assessment based on structural indicators, brand spoofing risk, or transport patterns)."
           },
           {
             role: "user",

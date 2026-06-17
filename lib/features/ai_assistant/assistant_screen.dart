@@ -16,8 +16,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   List<Map<String, String>> messages = [
     {
       "role": "ai",
-      "text":
-          "👋 Hi! I'm your AI assistant.\nAsk me about store safety, scams, or safe shopping tips."
+      "text": "Hi! I'm your AI assistant.\nAsk me about store safety, scams, or safe shopping tips."
     }
   ];
 
@@ -26,12 +25,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   Future<void> sendMessage() async {
     final text = controller.text.trim();
 
-    print("======== SEND MESSAGE START ========");
-    print("User input: $text");
-    print("isLoading: $isLoading");
-
     if (text.isEmpty || isLoading) {
-      print("Blocked: empty or loading");
       return;
     }
 
@@ -41,21 +35,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
       isLoading = true;
     });
 
-    print("Message added to UI");
     _scrollToBottom();
 
     try {
-      final prompt =
-          "You are a professional e-commerce safety assistant.\n"
+      final prompt = "You are a professional e-commerce safety assistant.\n"
           "Answer clearly and shortly.\n\nUser: $text";
 
-      print("Sending to AIService...");
-      print("Prompt: $prompt");
-
       final response = await AIService.chat(prompt);
-
-      print("AI response received:");
-      print(response);
 
       setState(() {
         messages.add({
@@ -63,28 +49,20 @@ class _AssistantScreenState extends State<AssistantScreen> {
           "text": response.toString(),
         });
       });
-
-      print("AI message added to UI");
     } catch (e) {
-      print("ERROR in sendMessage:");
-      print(e.toString());
-
       setState(() {
         messages.add({
           "role": "ai",
-          "text": "⚠️ Failed to get response. Try again."
+          "text": "Failed to get response. Try again."
         });
       });
     } finally {
       setState(() => isLoading = false);
-      print("Loading finished");
-      print("======== SEND MESSAGE END ========");
       _scrollToBottom();
     }
   }
 
   void _scrollToBottom() {
-    print("Scrolling to bottom...");
     Future.delayed(const Duration(milliseconds: 200), () {
       if (scrollController.hasClients) {
         scrollController.animateTo(
@@ -92,17 +70,12 @@ class _AssistantScreenState extends State<AssistantScreen> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
-        print("Scroll done");
-      } else {
-        print("ScrollController has no clients");
       }
     });
   }
 
   Widget buildMessage(Map<String, String> msg) {
     final isUser = msg["role"] == "user";
-
-    print("Building message: ${msg["text"]}");
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -122,14 +95,23 @@ class _AssistantScreenState extends State<AssistantScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isUser ? AppColors.primary : AppColors.card,
-                borderRadius: BorderRadius.circular(16),
+                color: isUser ? AppColors.primary : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isUser ? 16 : 0),
+                  bottomRight: Radius.circular(isUser ? 0 : 16),
+                ),
+                border: isUser
+                    ? null
+                    : Border.all(color: const Color(0xFFE2E8F0), width: 1),
               ),
               child: Text(
                 msg["text"] ?? "",
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isUser ? Colors.white : const Color(0xFF0F172A),
                   height: 1.5,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -138,8 +120,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
           if (isUser)
             const CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.white24,
-              child: Icon(Icons.person, size: 16, color: Colors.white),
+              backgroundColor: Color(0xFFE2E8F0),
+              child: Icon(Icons.person, size: 16, color: Color(0xFF64748B)),
             ),
         ],
       ),
@@ -147,8 +129,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 
   Widget buildTyping() {
-    print("Showing typing indicator");
-
     return Row(
       children: [
         const CircleAvatar(
@@ -157,12 +137,20 @@ class _AssistantScreenState extends State<AssistantScreen> {
           child: Icon(Icons.smart_toy, size: 16, color: Colors.white),
         ),
         const SizedBox(width: 10),
-        Row(
-          children: const [
-            Dot(),
-            Dot(delay: 200),
-            Dot(delay: 400),
-          ],
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          ),
+          child: Row(
+            children: const [
+              Dot(),
+              Dot(delay: 200),
+              Dot(delay: 400),
+            ],
+          ),
         )
       ],
     );
@@ -170,12 +158,26 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("Building AssistantScreen UI");
-
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("AI Assistant"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          "AI Assistant",
+          style: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        shape: const Border(
+          bottom: BorderSide(
+            color: Color(0xFFE2E8F0),
+            width: 1,
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -195,49 +197,56 @@ class _AssistantScreenState extends State<AssistantScreen> {
               child: buildTyping(),
             ),
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.background,
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
               border: Border(
                 top: BorderSide(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Color(0xFFE2E8F0),
+                  width: 1,
                 ),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: TextField(
-                      controller: controller,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: "Ask anything...",
-                        hintStyle: TextStyle(color: Colors.white54),
-                        border: InputBorder.none,
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                          width: 1,
+                        ),
                       ),
-                      onSubmitted: (_) => sendMessage(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: controller,
+                        style: const TextStyle(color: Color(0xFF0F172A)),
+                        decoration: const InputDecoration(
+                          hintText: "Ask anything...",
+                          hintStyle: TextStyle(color: Color(0xFF94A3B8)),
+                          border: InputBorder.none,
+                        ),
+                        onSubmitted: (_) => sendMessage(),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: isLoading ? null : sendMessage,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      shape: BoxShape.circle,
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: isLoading ? null : sendMessage,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.send, color: Colors.white, size: 20),
                     ),
-                    child: const Icon(Icons.send, color: Colors.white),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -255,16 +264,12 @@ class Dot extends StatefulWidget {
   State<Dot> createState() => _DotState();
 }
 
-class _DotState extends State<Dot>
-    with SingleTickerProviderStateMixin {
+class _DotState extends State<Dot> with SingleTickerProviderStateMixin {
   late AnimationController controller;
 
   @override
   void initState() {
     super.initState();
-
-    print("Dot init with delay ${widget.delay}");
-
     controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -273,7 +278,6 @@ class _DotState extends State<Dot>
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) {
         controller.repeat();
-        print("Dot animation started");
       }
     });
   }
@@ -286,7 +290,7 @@ class _DotState extends State<Dot>
         padding: EdgeInsets.symmetric(horizontal: 2),
         child: CircleAvatar(
           radius: 3,
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFF64748B),
         ),
       ),
     );
@@ -294,7 +298,6 @@ class _DotState extends State<Dot>
 
   @override
   void dispose() {
-    print("Dot disposed");
     controller.dispose();
     super.dispose();
   }

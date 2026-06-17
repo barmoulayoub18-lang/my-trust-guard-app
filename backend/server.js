@@ -12,6 +12,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const SERPER_URL = "https://google.serper.dev/search";
+const SERPER_IMAGES_URL = "https://google.serper.dev/images";
 const AI_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const cache = new Map();
@@ -68,10 +69,40 @@ async function searchGoogle(query) {
       }
     );
 
-    logStep("STEP 1 SUCCESS: GOOGLE RESPONSE", res.data);
+    let imagesList = [];
+    try {
+      const imgRes = await axios.post(
+        SERPER_IMAGES_URL,
+        {
+          q: query,
+          gl: "us",
+          hl: "en",
+          num: 5,
+        },
+        {
+          headers: {
+            "X-API-KEY": process.env.SERPER_KEY,
+            "Content-Type": "application/json",
+          },
+          timeout: 8000,
+        }
+      );
+      if (imgRes.data && imgRes.data.images) {
+        imagesList = imgRes.data.images.map(img => img.imageUrl).filter(url => url);
+      }
+    } catch (e) {
+      logStep("IMAGE FETCH FAILURE IN SERVER LAYER", e.message);
+    }
 
-    setCache("search_" + query, res.data);
-    return res.data;
+    const compiledData = {
+      ...res.data,
+      images: imagesList
+    };
+
+    logStep("STEP 1 SUCCESS: GOOGLE COMPREHENSIVE RESPONSE WITH IMAGES", compiledData);
+
+    setCache("search_" + query, compiledData);
+    return compiledData;
 
   } catch (e) {
     logStep("STEP 1 ERROR", {
@@ -93,9 +124,10 @@ function prepareData(data) {
     })),
     questions: (data.peopleAlsoAsk || []).map((q) => q.question),
     knowledge: data.knowledgeGraph || {},
+    images: data.images || []
   };
 
-  logStep("STEP 2 SUCCESS: CLEANED DATA", cleaned);
+  logStep("STEP 2 SUCCESS: CLEANED DATA WITH IMAGES", cleaned);
 
   return cleaned;
 }
@@ -114,7 +146,7 @@ async function analyzeWithAI(cleanData, query) {
         {
           role: "system",
           content:
-            "You are a STRICT scam detection AI. You MUST return ONLY JSON.",
+            "You are a STRICT scam detection AI. You MUST analyze the provided search engine data dynamic text results, review metrics, and trust patterns to compute a real dynamic trust score strictly customized for the query. Never use fixed fallbacks for data that you successfully parse. You MUST return ONLY JSON.",
         },
         {
           role: "user",
@@ -197,7 +229,7 @@ function extractJson(text) {
     logStep("JSON PARSE FAILED", e.message);
 
     return {
-      score: 50,
+      score: 45,
       risk: "medium",
       reviews: "unknown",
       activity: "unknown",
@@ -229,6 +261,8 @@ app.post("/analyze", async (req, res) => {
     const cleanData = prepareData(searchData);
 
     const aiResult = await analyzeWithAI(cleanData, query);
+
+    aiResult.images = cleanData.images;
 
     const duration = Date.now() - startTime;
 
@@ -285,7 +319,7 @@ app.post("/scan-link", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are an advanced cyber threat response AI. Analyze the website context and return ONLY a strict JSON object with clear Arabic descriptions so the user knows what the site contains before clicking."
+            content: "You are an advanced cyber threat response AI. Analyze the website context and calculate a dynamic, case-specific risk score between 0 and 100 based entirely on the unique indicators discovered. Never fallback to fixed score metrics if you can interpret the payload. Return ONLY a strict JSON object with clear English descriptions so the user knows what the site contains before clicking."
           },
           {
             role: "user",
@@ -298,9 +332,9 @@ Return ONLY JSON format:
 {
   "risk_score": number (0-100),
   "is_phishing": boolean,
-  "site_summary": "خلاصة دقيقة جداً باللغة العربية تشرح للمستخدم محتوى الموقع وماذا سيجد داخله عند الدخول (مثال: صفحة تسجيل دخول جامعية، متجر إلكتروني لبيع العطور، إلخ)",
-  "verifiable_reason": "التحليل الأمني والسبب الفعلي باللغة العربية (مثال: الموقع رسمي وموثوق لشركة كذا، أو احذر الموقع يقلد واجهة تسجيل دخول مستندات جوجل لسرقة البيانات)",
-  "detected_flags": ["وصف الرايات أو المؤشرات الأمنية باللغة العربية"]
+  "site_summary": "Highly accurate summary in English explaining the website content and what the user will find inside upon entering (e.g., University login page, Online perfume store, etc.)",
+  "verifiable_reason": "Security analysis and actual reason in English (e.g., The website is official and trusted for company X, or Beware the website spoofs a Google Docs login interface to steal credentials)",
+  "detected_flags": ["Description of flags or security indicators in English"]
 }
             `
           }
@@ -322,13 +356,13 @@ Return ONLY JSON format:
       logStep("AI LINK ANALYSIS FAILED, FALLING BACK TO DYNAMIC SEARCH EXTRACTION", aiError.message);
       
       const targetDomainName = baseScan.details?.target_domain || url.split('/')[2] || '';
-      let generatedSummary = baseScan.details?.site_summary || `منصة رقمية نشطة تابعة للنطاق المستهدف [${targetDomainName}].`;
-      let generatedReason = baseScan.details?.verifiable_reason || `تم فحص البنية الأساسية للنطاق المختار وهو مستقر وآمن هيكلياً من التهديدات المباشرة.`;
+      let generatedSummary = baseScan.details?.site_summary || `Active digital platform belonging to the target domain [${targetDomainName}].`;
+      let generatedReason = baseScan.details?.verifiable_reason || `The infrastructure of the selected domain has been traced and verified as stable and structurally secure from direct threats.`;
       
       if (cleanWebData.results && cleanWebData.results.length > 0) {
         const primaryResult = cleanWebData.results[0];
-        generatedSummary = `الموقع يمثل منصة تابعة لـ [${primaryResult.title}]. خلاصة المحتوى المكتشف: ${primaryResult.snippet}`;
-        generatedReason = `تم تتبع وفحص الكود ومطابقته برمجياً بنجاح، محتوى النطاق يطابق المؤشرات الموثقة لـ ${primaryResult.title} بشكل كامل وآمن.`;
+        generatedSummary = `The website represents a platform associated with [${primaryResult.title}]. Content discovery summary: ${primaryResult.snippet}`;
+        generatedReason = `The source code was successfully tracked, analyzed, and programmatically matched. The domain content strictly aligns with verified indicators for ${primaryResult.title} safely and securely.`;
       }
 
       aiAnalysis = {
@@ -348,12 +382,13 @@ Return ONLY JSON format:
       risk_score: aiAnalysis.risk_score ?? aiAnalysis.risk_score ?? baseScan.risk_score ?? 15,
       is_phishing: aiAnalysis.is_phishing ?? baseScan.is_phishing ?? false,
       details: {
-        redirects_count: baseScan.details?.redirects_count ?? 0,
         redirect_path: baseScan.details?.redirect_path || [url],
+        redirects_count: baseScan.details?.redirects_count ?? 0,
+        detected_flags: aiAnalysis.detected_flags || baseScan.details?.detected_flags || [],
         target_domain: baseScan.details?.target_domain || url.split('/')[2] || '',
         site_summary: aiAnalysis.site_summary,
         verifiable_reason: aiAnalysis.verifiable_reason,
-        detected_flags: aiAnalysis.detected_flags || baseScan.details?.detected_flags || []
+        images: cleanWebData.images || []
       }
     };
 

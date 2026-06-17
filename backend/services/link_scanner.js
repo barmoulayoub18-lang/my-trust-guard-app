@@ -150,8 +150,8 @@ async function scanLink(url) {
             }
         }
 
-        let siteSummary = 'لا يتوفر تفاصيل استباقية مباشرة لهذا الرابط بسبب قيود الحماية على الخادم المستهدف.';
-        let dynamicReason = 'تم فحص الرابط استناداً إلى المؤشرات الهيكلية وسلوك النطاق الحالي.';
+        let siteSummary = 'Failed to establish direct connection with the target host for real-time digital identity verification.';
+        let dynamicReason = 'The link has been scanned based on structural indicators and current domain behavior.';
 
         console.log("🟡 [LINK SCANNER AI ROUTER]: Invoking deepScanLinkWithAI function from ai.js module pipeline");
         const aiResult = await deepScanLinkWithAI(domain, finalUrl, redirectsCount, flags, pageTitle, pageSnippet, isFetchedSuccessfully);
@@ -178,9 +178,9 @@ async function scanLink(url) {
         } else {
             console.log("⚠️ [LINK SCANNER AI ROUTER PIPELINE ERROR]: aiResult object returned empty, executing standard baseline security rules text output mapping");
             if (riskScore >= 45) {
-                dynamicReason = 'تم رصد سلوك مريب ومؤشرات اختراق هيكلية عالية في بنية النطاق الرقمي للرابط والموجهات التابعة له.';
+                dynamicReason = 'We could not retrieve direct content from the target host, but multiple high-risk indicators were detected in the URL structure and redirection behavior, suggesting a strong likelihood of phishing activity.';
             } else {
-                dynamicReason = 'فشل الاتصال المباشر بنظام التحليل الذكي المتقدم لتأكيد الهوية الرقمية للرابط في الوقت الفعلي.';
+                dynamicReason = 'Failed to establish direct connection with the target host for real-time digital identity verification.';
             }
         }
 
@@ -223,8 +223,8 @@ async function scanLink(url) {
                 redirect_path: [url],
                 detected_flags: ['Failed to establish connection sequence with target host completely'],
                 target_domain: url,
-                site_summary: 'يتعذر الوصول إلى هذا الرابط نهائياً أو يرفض الطلبات بشكل مريب لمنع تتبع المصدر الفعلي.',
-                verifiable_reason: 'الخادم المستهدف يسقط الاتصالات بشكل فوري وهي ممارسة شائعة في نطاقات التصيد العشوائية قصيرة المدى.'
+                site_summary: 'Failed to establish direct connection with the target host for real-time digital identity verification.',
+                verifiable_reason: 'The target server drops connections immediately, which is a common practice in short-range random phishing campaigns.'
             }
         };
     }
