@@ -3,6 +3,8 @@ import axios from "axios";
 import cors from "cors";
 import dotenv from "dotenv";
 import { scanLink } from "./services/link_scanner.js";
+import { searchGoogle, prepareSearchData } from "./services/search.js";
+import { analyzeStoreWithAI, generatePanicReportWithAI } from "./services/ai.js";
 
 dotenv.config();
 
@@ -11,8 +13,6 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const SERPER_URL = "https://google.serper.dev/search";
-const SERPER_IMAGES_URL = "https://google.serper.dev/images";
 const AI_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const cache = new Map();
@@ -43,173 +43,6 @@ function setCache(key, data, ttl = 1000 * 60 * 10) {
     data,
     expiry: Date.now() + ttl,
   });
-}
-
-async function searchGoogle(query) {
-  logStep("STEP 1: GOOGLE SEARCH START", { query });
-
-  const cached = getCache("search_" + query);
-  if (cached) return cached;
-
-  try {
-    const res = await axios.post(
-      SERPER_URL,
-      {
-        q: query,
-        gl: "us",
-        hl: "en",
-        num: 5,
-      },
-      {
-        headers: {
-          "X-API-KEY": process.env.SERPER_KEY,
-          "Content-Type": "application/json",
-        },
-        timeout: 10000,
-      }
-    );
-
-    let imagesList = [];
-    try {
-      const imgRes = await axios.post(
-        SERPER_IMAGES_URL,
-        {
-          q: query,
-          gl: "us",
-          hl: "en",
-          num: 5,
-        },
-        {
-          headers: {
-            "X-API-KEY": process.env.SERPER_KEY,
-            "Content-Type": "application/json",
-          },
-          timeout: 8000,
-        }
-      );
-      if (imgRes.data && imgRes.data.images) {
-        imagesList = imgRes.data.images.map(img => img.imageUrl).filter(url => url);
-      }
-    } catch (e) {
-      logStep("IMAGE FETCH FAILURE IN SERVER LAYER", e.message);
-    }
-
-    const compiledData = {
-      ...res.data,
-      images: imagesList
-    };
-
-    logStep("STEP 1 SUCCESS: GOOGLE COMPREHENSIVE RESPONSE WITH IMAGES", compiledData);
-
-    setCache("search_" + query, compiledData);
-    return compiledData;
-
-  } catch (e) {
-    logStep("STEP 1 ERROR", {
-      message: e.message,
-      response: e.response?.data,
-    });
-    throw e;
-  }
-}
-
-function prepareData(data) {
-  logStep("STEP 2: CLEAN DATA START");
-
-  const cleaned = {
-    results: (data.organic || []).slice(0, 5).map((r) => ({
-      title: r.title,
-      snippet: r.snippet,
-      link: r.link,
-    })),
-    questions: (data.peopleAlsoAsk || []).map((q) => q.question),
-    knowledge: data.knowledgeGraph || {},
-    images: data.images || []
-  };
-
-  logStep("STEP 2 SUCCESS: CLEANED DATA WITH IMAGES", cleaned);
-
-  return cleaned;
-}
-
-async function analyzeWithAI(cleanData, query) {
-  logStep("STEP 3: AI ANALYSIS START", { query });
-
-  const cached = getCache("ai_" + query);
-  if (cached) return cached;
-
-  try {
-    const payload = {
-      model: process.env.AI_MODEL,
-      temperature: 0.1,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a STRICT scam detection AI. You MUST analyze the provided search engine data dynamic text results, review metrics, and trust patterns to compute a real dynamic trust score strictly customized for the query. Never use fixed fallbacks for data that you successfully parse. You MUST return ONLY JSON.",
-        },
-        {
-          role: "user",
-          content: `
-Analyze this store or product:
-
-"${query}"
-
-DATA:
-${JSON.stringify(cleanData)}
-
-Return ONLY JSON:
-
-{
-  "score": number (0-100),
-  "risk": "low" | "medium" | "high",
-  "reviews": "short summary",
-  "activity": "active | suspicious | inactive",
-  "trust_signals": "positive indicators",
-  "red_flags": ["list of risks"],
-  "explanation": "clear short explanation"
-}
-          `,
-        },
-      ],
-    };
-
-    logStep("AI REQUEST PAYLOAD", payload);
-
-    const res = await axios.post(
-      AI_URL,
-      payload,
-      {
-        headers: {
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "trust_guard_app",
-        },
-        timeout: 20000,
-      }
-    );
-
-    logStep("AI RAW RESPONSE", res.data);
-
-    const content = res.data.choices?.[0]?.message?.content;
-
-    logStep("AI TEXT RESPONSE", content);
-
-    const parsed = extractJson(content);
-
-    logStep("AI PARSED JSON", parsed);
-
-    setCache("ai_" + query, parsed);
-
-    return parsed;
-
-  } catch (e) {
-    logStep("STEP 3 ERROR", {
-      message: e.message,
-      response: e.response?.data,
-    });
-    throw e;
-  }
 }
 
 function extractJson(text) {
@@ -258,11 +91,9 @@ app.post("/analyze", async (req, res) => {
 
     const searchData = await searchGoogle(query);
 
-    const cleanData = prepareData(searchData);
+    const cleanData = prepareSearchData(searchData);
 
-    const aiResult = await analyzeWithAI(cleanData, query);
-
-    aiResult.images = cleanData.images;
+    const aiResult = await analyzeStoreWithAI(cleanData, query);
 
     const duration = Date.now() - startTime;
 
@@ -308,7 +139,7 @@ app.post("/scan-link", async (req, res) => {
       logStep("COULD NOT FETCH WEB CONTEXT", searchError.message);
     }
 
-    const cleanWebData = prepareData(webContext);
+    const cleanWebData = prepareSearchData(webContext);
 
     logStep("SENDING HTML CONTEXT TO OPENROUTER AI... (EMBEDDED WRAPPER)");
     let aiAnalysis;
@@ -388,7 +219,7 @@ Return ONLY JSON format:
         target_domain: baseScan.details?.target_domain || url.split('/')[2] || '',
         site_summary: aiAnalysis.site_summary,
         verifiable_reason: aiAnalysis.verifiable_reason,
-        images: cleanWebData.images || []
+        images: []
       }
     };
 
@@ -409,31 +240,7 @@ app.post("/generate-panic-report", async (req, res) => {
       return res.status(400).json({ success: false, error: "Missing required payload metrics" });
     }
 
-    const payload = {
-      model: process.env.AI_MODEL || "google/gemini-2.5-flash",
-      temperature: 0.3,
-      messages: [
-        {
-          role: "system",
-          content: "You are a professional legal cybersecurity analyst specializing in standard international cybercrime response frameworks. Draft a structured, detailed, and clean legal complaint report based on user input without any markdown formatting characters."
-        },
-        {
-          role: "user",
-          content: `Generate a formal legal complaint statement for authority submission. Region: ${country}. Classification: ${scamType}. Event Specifics: ${details || 'Not documented'}.`
-        }
-      ]
-    };
-
-    const response = await axios.post(AI_URL, payload, {
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "trust_guard_app"
-      },
-      timeout: 20000
-    });
-
-    const reportText = response.data.choices?.[0]?.message?.content || "Failed to structure dynamic legal framework metrics.";
+    const reportText = await generatePanicReportWithAI(scamType, country, details);
     return res.json({ success: true, report: reportText });
   } catch (e) {
     return res.status(500).json({ success: false, error: e.message });
