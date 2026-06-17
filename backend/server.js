@@ -114,7 +114,7 @@ async function analyzeWithAI(cleanData, query) {
         {
           role: "system",
           content:
-            "You are a STRICT ecommerce trust evaluation engine. You must output a highly dynamic, case-specific trust score between 0 and 100 based entirely on the unique evidence gathered. Never use default rounded values like 50, 60, or 75. Provide granular granularity down to the exact digit (e.g. 57, 73, 84, 98) depending directly on the trust signals or red flags found. You MUST return ONLY JSON.",
+            "You are an uncompromising, strictly realistic, and hyper-critical ecommerce trust evaluation engine. Your job is to calculate an exact, highly specific trust score (0-100) and generate a raw analysis. Never apply default rounded scores (like 50, 60, 75, or a flat 82) to famous or globally known web stores. Every single shop must be judged completely from scratch based on the unique evidence provided in the dataset. Evaluate strict criteria with zero bias: actual customer service quality, customer reviews across platforms, brand reputation, management efficiency, speed of processing/shipping, social media feedback, and active business operations. Be brutally honest to avoid unfair inflation or downgrading. In the 'reviews' field, synthesize a direct, comprehensive summary of actual customer opinions, star ratings, or platform feedback (e.g., Trustpilot, social media) discovered in the data. You MUST return ONLY a JSON object.",
         },
         {
           role: "user",
@@ -123,19 +123,19 @@ Analyze this store or product:
 
 "${query}"
 
-DATA:
+DATA PROVIDED:
 ${JSON.stringify(cleanData)}
 
-Return ONLY JSON:
+Return ONLY JSON format without markdown wrapping:
 
 {
-  "score": number (0-100),
+  "score": number (0-100 based strictly on specific granular criteria and real efforts),
   "risk": "low" | "medium" | "high",
-  "reviews": "short summary",
+  "reviews": "A highly accurate dynamic summary of real customer experiences, sentiment, social media feedback, or ratings extracted strictly from the provided text data",
   "activity": "active | suspicious | inactive",
-  "trust_signals": "positive indicators",
-  "red_flags": ["list of risks"],
-  "explanation": "clear short explanation"
+  "trust_signals": "positive indicators observed",
+  "red_flags": ["list of realistic risks or shortcomings"],
+  "explanation": "clear precise breakdown of the evaluation"
 }
           `,
         },
